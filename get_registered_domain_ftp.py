@@ -1,6 +1,5 @@
 import os
 import re
-import codecs
 import datetime
 from ftplib import FTP
 import gspread # to manipulate spreadsheet
