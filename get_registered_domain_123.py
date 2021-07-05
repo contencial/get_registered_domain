@@ -12,7 +12,7 @@ from fake_useragent import UserAgent
 from oauth2client.service_account import ServiceAccountCredentials
 
 # Logger setting
-from logging import getLogger, StreamHandler, DEBUG
+from logging import getLogger, FileHandler, DEBUG
 logger = getLogger(__name__)
 os.makedirs('./log', exist_ok=True)
 handler = FileHandler(f'log/{today.strftime("%Y-%m-%d")}_result.log', mode='a')
