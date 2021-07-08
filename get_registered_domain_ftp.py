@@ -103,6 +103,7 @@ if __name__ == '__main__':
         logger.info("Write to Spreadsheet")
         write_registered_domain_list(registered_domain_info)
         logger.info("Finish")
+        exit(0)
     except Exception as err:
         logger.error(f'Error: {err}')
         exit(1)

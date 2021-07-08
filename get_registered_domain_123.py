@@ -149,6 +149,7 @@ if __name__ == '__main__':
         domain_info = get_domain_info()
         logger.debug("123_server: start write_domain_list")
         write_domain_info(domain_info)
+        exit(0)
     except Exception as err:
         logger.debug(f'123_server: {err}')
         exit(1)
