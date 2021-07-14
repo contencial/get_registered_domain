@@ -68,6 +68,8 @@ def parse_contents(contents):
     domain_list = tbody[1].find_all("a")
     for element in domain_list:
         domain_name = element.get_text()
+        if re.search("m005b400", domain_name):
+            continue
         yield [server_no, domain_name, f'=IF(COUNTIF(\'契約中ドメイン一覧\'!B:B, "{domain_name}"), TRUE, FALSE)']
 
 def button_click(driver, button_text):
