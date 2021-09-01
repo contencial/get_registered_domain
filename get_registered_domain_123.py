@@ -10,6 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
 from fake_useragent import UserAgent
 from oauth2client.service_account import ServiceAccountCredentials
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Logger setting
 from logging import getLogger, FileHandler, DEBUG
@@ -84,17 +85,16 @@ def get_domain_info():
     url = "https://member.123server.jp/members/login/"
     login = os.environ['SERVER123_USER']
     password = os.environ['SERVER123_PASS']
-    webdriverPath = os.environ['WEBDRIVER_PATH']
     
     ua = UserAgent()
     logger.debug(f'123_server: UserAgent: {ua.chrome}')
 
     options = Options()
-    options.add_argument('--headless')
+#   options.add_argument('--headless')
     options.add_argument(ua.chrome)
     
     try:
-        driver = webdriver.Chrome(executable_path=webdriverPath, options=options)
+        driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
         
         driver.get(url)
 
