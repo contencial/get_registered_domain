@@ -90,7 +90,7 @@ def get_domain_info():
     logger.debug(f'123_server: UserAgent: {ua.chrome}')
 
     options = Options()
-#   options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument(ua.chrome)
     
     try:
