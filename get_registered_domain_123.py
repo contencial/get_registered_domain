@@ -90,13 +90,13 @@ def get_domain_info():
     logger.debug(f'123_server: UserAgent: {ua.chrome}')
 
     options = Options()
-    options.add_argument('--headless')
-    options.add_argument(ua.chrome)
+    options.add_argument(f'user-agent={ua.chrome}')
     
     try:
         driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
         
         driver.get(url)
+        driver.maximize_window()
 
         driver.find_element_by_id("MemberContractId").send_keys(login)
         driver.find_element_by_id("MemberPassword").send_keys(password)
