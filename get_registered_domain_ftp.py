@@ -1,8 +1,9 @@
 import os
 import re
 import datetime
-from ftplib import FTP
 import gspread # to manipulate spreadsheet
+from time import sleep
+from ftplib import FTP
 from oauth2client.service_account import ServiceAccountCredentials # to access Google API
 
 # Logger setting
@@ -28,24 +29,31 @@ def get_ftp_server_info():
     ftp_server_list = [cell.value for cell in cell_list]
     return ftp_server_list
 
-def get_existing_domain_list(server_no, host, user, passwd):
-    ftp = FTP(
-            host=host,
-            user=user,
-            passwd=passwd
-        )
+def get_existing_domain_list(server_no, host, user, passwd, trials):
+    if trials > 5:
+        exit(1)
+    try:
+        ftp = FTP(
+                host=host,
+                user=user,
+                passwd=passwd
+            )
 
-    items = ftp.mlsd('./public_html')
-    domain_list = list()
-    repatter = re.compile('.*\.\w+$')
+        items = ftp.mlsd('./public_html')
+        domain_list = list()
+        repatter = re.compile('.*\.\w+$')
 
-    for filename, opt in items:
-        if opt['type'] != 'dir' or filename == '.well-known':
-            continue
-        result = repatter.match(filename)
-        if result:
-            domain_list.append([server_no, filename, f'=IF(COUNTIF(\'契約中ドメイン一覧\'!B:B, "{filename}"), TRUE, FALSE)'])
-    return domain_list
+        for filename, opt in items:
+            if opt['type'] != 'dir' or filename == '.well-known':
+                continue
+            result = repatter.match(filename)
+            if result:
+                domain_list.append([server_no, filename, f'=IF(COUNTIF(\'契約中ドメイン一覧\'!B:B, "{filename}"), TRUE, FALSE)'])
+        return domain_list
+    except Exception as err:
+        logger.error(f'Error: {err}')
+        sleep(600)
+        return get_existing_domain_list(server_no, host, user, passwd, trials + 1)
 
 def write_registered_domain_list(domain_info):
     SPREADSHEET_ID = os.environ['UNDER_CONTRACT_DOMAIN_SSID']
@@ -96,7 +104,7 @@ if __name__ == '__main__':
         for host in ftp_server_list:
             server_no += 1
             logger.info(f'{server_no}, {host}, {user}, {passwd}')
-            domain_chunk = get_existing_domain_list(server_no, host, user, passwd)
+            domain_chunk = get_existing_domain_list(server_no, host, user, passwd, 0)
             logger.info(f'server_no {server_no}: {len(domain_chunk)}')
             registered_domain_info.extend(domain_chunk)
         logger.info(len(registered_domain_info))
