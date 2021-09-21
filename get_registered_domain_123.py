@@ -123,15 +123,15 @@ def get_domain_info():
                 domain_list_button = driver.find_elements_by_link_text("ドメイン一覧")
                 domain_list_button[index].click()
                 server_no = 100 * (i - 1) + index + 1
-                sleep(5)
+                sleep(2)
                 contents = BeautifulSoup(driver.page_source, "lxml")
                 domain_chunk = list(parse_contents(contents))
                 logger.debug(f'123_server: No {server_no}: {len(domain_chunk)}')
                 registered_domain_list.extend(domain_chunk)
                 driver.find_element_by_xpath('//a[@href="/servers/"]').click()
-                sleep(3)
+                sleep(2)
                 driver.find_element_by_link_text(str(i)).click()
-                sleep(3)
+                sleep(2)
 
         logger.debug(f'123_server: total_list_number: {len(registered_domain_list)}')
 
