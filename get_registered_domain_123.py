@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.ui import WebDriverWait
 from fake_useragent import UserAgent
 from oauth2client.service_account import ServiceAccountCredentials
 from webdriver_manager.chrome import ChromeDriverManager
@@ -81,6 +82,19 @@ def button_click(driver, button_text):
             button.click()
             break
 
+def login_to_serverlist(driver, login, password):
+    driver.find_element_by_id("MemberContractId").send_keys(login)
+    driver.find_element_by_id("MemberPassword").send_keys(password)
+    button_click(driver, "ログイン")
+
+    logger.debug('register_domain_info: login')
+    sleep(3)
+
+    driver.find_element_by_xpath('//a[@href="/servers/"]').click()
+
+    logger.debug('get_registered_domain_info: go to server_list')
+    sleep(3)
+
 def get_domain_info():
     url = "https://member.123server.jp/members/login/"
     login = os.environ['SERVER123_USER']
@@ -111,27 +125,33 @@ def get_domain_info():
         sleep(3)
 
         paging = driver.find_element_by_xpath('//ul[@class="pagination"]').find_elements_by_tag_name("a")
+        logger.debug(f'page_size: {len(paging)}')
         
         registered_domain_list = list()
         for i in range(len(paging)):
             if i < 1 or i > 3:
                 continue
-            logger.debug(f'123_server: page: {i}')
             driver.find_element_by_link_text(str(i)).click()
-            sleep(10)
+            logger.debug(f'123_server: page: {i}')
+            if re.search(r"login", driver.current_url) != None:
+                login_to_serverlist(driver, login, password)
+                driver.find_element_by_link_text(str(i)).click()
+            sleep(3)
             for index in range(100):
-                domain_list_button = driver.find_elements_by_link_text("ドメイン一覧")
-                domain_list_button[index].click()
                 server_no = 100 * (i - 1) + index + 1
-                sleep(2)
+                url = f'https://member.123server.jp/servers/cpanel_domain/{server_no}'
+
+                driver.execute_script(f"window.open('{url}');")
+                WebDriverWait(driver, 3).until(lambda d: len(d.window_handles) > 1)
+                driver.switch_to.window(driver.window_handles[1])
+
                 contents = BeautifulSoup(driver.page_source, "lxml")
                 domain_chunk = list(parse_contents(contents))
                 logger.debug(f'123_server: No {server_no}: {len(domain_chunk)}')
                 registered_domain_list.extend(domain_chunk)
-                driver.find_element_by_xpath('//a[@href="/servers/"]').click()
-                sleep(2)
-                driver.find_element_by_link_text(str(i)).click()
-                sleep(2)
+
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
 
         logger.debug(f'123_server: total_list_number: {len(registered_domain_list)}')
 
