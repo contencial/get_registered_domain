@@ -8,6 +8,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome import service as fs
 from selenium.webdriver.support.ui import WebDriverWait
 from fake_useragent import UserAgent
 from oauth2client.service_account import ServiceAccountCredentials
@@ -75,7 +77,7 @@ def parse_contents(contents):
         yield [server_no, domain_name, f'=IF(COUNTIF(\'契約中ドメイン一覧\'!B:B, "{domain_name}"), TRUE, FALSE)']
 
 def button_click(driver, button_text):
-    buttons = driver.find_elements_by_tag_name("button")
+    buttons = driver.find_elements(By.TAG_NAME, "button")
 
     for button in buttons:
         if button.text == button_text:
@@ -83,14 +85,14 @@ def button_click(driver, button_text):
             break
 
 def login_to_serverlist(driver, login, password):
-    driver.find_element_by_id("MemberContractId").send_keys(login)
-    driver.find_element_by_id("MemberPassword").send_keys(password)
+    driver.find_element(By.ID, "MemberContractId").send_keys(login)
+    driver.find_element(By.ID, "MemberPassword").send_keys(password)
     button_click(driver, "ログイン")
 
     logger.debug('register_domain_info: login')
     sleep(3)
 
-    driver.find_element_by_xpath('//a[@href="/servers/"]').click()
+    driver.find_element(By.XPATH, '//a[@href="/servers/"]').click()
 
     logger.debug('get_registered_domain_info: go to server_list')
     sleep(3)
@@ -107,35 +109,36 @@ def get_domain_info():
     options.add_argument(f'user-agent={ua.chrome}')
     
     try:
-        driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+        chrome_service = fs.Service(executable_path=ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=chrome_service, options=options)
         
         driver.get(url)
         driver.maximize_window()
 
-        driver.find_element_by_id("MemberContractId").send_keys(login)
-        driver.find_element_by_id("MemberPassword").send_keys(password)
+        driver.find_element(By.ID, "MemberContractId").send_keys(login)
+        driver.find_element(By.ID, "MemberPassword").send_keys(password)
         button_click(driver, "ログイン")
         
         logger.debug('123_server: login')
         sleep(3)
         
-        driver.find_element_by_xpath('//a[@href="/servers/"]').click()
+        driver.find_element(By.XPATH, '//a[@href="/servers/"]').click()
         
         logger.debug('123_server: go to server_list')
         sleep(3)
 
-        paging = driver.find_element_by_xpath('//ul[@class="pagination"]').find_elements_by_tag_name("a")
+        paging = driver.find_element(By.XPATH, '//ul[@class="pagination"]').find_elements(By.TAG_NAME, "a")
         logger.debug(f'page_size: {len(paging)}')
         
         registered_domain_list = list()
         for i in range(len(paging)):
             if i < 1 or i > 3:
                 continue
-            driver.find_element_by_link_text(str(i)).click()
+            driver.find_element(By.LINK_TEXT, str(i)).click()
             logger.debug(f'123_server: page: {i}')
             if re.search(r"login", driver.current_url) != None:
                 login_to_serverlist(driver, login, password)
-                driver.find_element_by_link_text(str(i)).click()
+                driver.find_element(By.LINK_TEXT, str(i)).click()
             sleep(3)
             for index in range(100):
                 server_no = 100 * (i - 1) + index + 1
